@@ -39,9 +39,9 @@ The simulation ends when no Exposed or Infected individuals remain.
 | **Population size** | Number of simulated individuals |
 | **Days/second** | Simulation playback speed |
 
-The **Hide Vaccinated** checkbox removes vaccinated dots from the population grid to reduce visual clutter at high vaccination fractions.
+The **Hide Vaccinated** checkbox removes vaccinated dots from the population grid and hides the V line from the time course chart, reducing visual clutter at high vaccination fractions.
 
 ## Display
 
 - **Population grid** — each dot is one individual, colored by state; infected agents show a glow halo
-- **Time course chart** — SEIRD curves over simulated days; Y-axis scaled to the initial susceptible population; the vaccinated line is hidden when it would fall above the chart ceiling
+- **Time course chart** — SEIRD curves over simulated days; Y-axis scaled to fit all visible series; when "Hide Vaccinated" is unchecked the axis expands to include the V line, and when checked the V line is also hidden from the chart

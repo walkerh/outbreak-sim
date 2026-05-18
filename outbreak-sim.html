@@ -618,7 +618,10 @@ function drawLineChart() {
   }
 
   const days = history.length;
-  const maxScale = history[0].S;  // initial susceptible count sets the ceiling
+  const hideVax = $('chk-hide-vax').checked;
+  const maxScale = hideVax
+    ? history[0].S
+    : Math.max(history[0].S, history[0].V);
 
   // grid lines
   ctx.strokeStyle = '#0e1e2e';
@@ -658,15 +661,13 @@ function drawLineChart() {
   ctx.textAlign = 'center';
   ctx.fillText('DAY', pad.left + cw / 2, H - 4);
 
-  // omit V line when it would plot above the chart ceiling
-  const showV = history[0].V <= maxScale;
   const series = [
     {key: 'S', color: COLORS.S, dash: []},
     {key: 'E', color: COLORS.E, dash: [8, 4]},
     {key: 'I', color: COLORS.I, dash: []},
     {key: 'R', color: COLORS.R, dash: [4, 4]},
     {key: 'D', color: COLORS.D, dash: [2, 3]},
-    ...(showV ? [{key: 'V', color: COLORS.V, dash: [4, 3, 1, 3]}] : []),
+    ...(!hideVax ? [{key: 'V', color: COLORS.V, dash: [4, 3, 1, 3]}] : []),
   ];
 
   series.forEach(({key, color, dash}) => {
@@ -773,7 +774,7 @@ $('btn-reset').addEventListener('click', () => {
 });
 
 $('chk-hide-vax').addEventListener('change', () => {
-  if (!running) drawPopCanvas();
+  if (!running) { drawPopCanvas(); drawLineChart(); }
 });
 
 // ─────────────────────────────────────────────
