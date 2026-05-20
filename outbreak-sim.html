@@ -20,6 +20,7 @@
     --r-color:   #009E73;   /* Recovered    — Okabe-Ito bluish green  */
     --d-color:   #E03060;   /* Dead         — bright red              */
     --v-color:   #0072B2;   /* Vaccinated   — Okabe-Ito blue          */
+    --l-color:   #CC79A7;   /* Long-term symptoms — reddish purple    */
 
     --font-mono: 'Share Tech Mono', monospace;
     --font-head: 'Barlow Condensed', sans-serif;
@@ -405,6 +406,12 @@
           <div class="desc">Number of individuals in the simulation dot grid.</div>
         </div>
 
+        <div class="control">
+          <label for="s-long">Long-Term Symptoms <span class="val" id="v-long">10.0%</span></label>
+          <input type="range" id="s-long" min="0" max="0.50" step="0.005" value="0.10">
+          <div class="desc">Fraction of nonfatal infections that result in persistent long-term symptoms.</div>
+        </div>
+
       </div>
     </div>
 
@@ -430,6 +437,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:var(--r-color)"></div>Recovered (immune)</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--d-color)"></div>Dead</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--v-color)"></div>Vaccinated (immune)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--l-color)"></div>Long-term symptoms</div>
       </div>
     </div>
 
@@ -442,6 +450,7 @@
         <div class="stat-box"><div class="stat-val" id="st-r">—</div><div class="stat-key">Recovered</div></div>
         <div class="stat-box"><div class="stat-val" id="st-d">—</div><div class="stat-key">Dead</div></div>
         <div class="stat-box"><div class="stat-val" id="st-v">—</div><div class="stat-key">Vaccinated</div></div>
+        <div class="stat-box"><div class="stat-val" id="st-l">—</div><div class="stat-key">Long-Term</div></div>
       </div>
     </div>
 
@@ -455,6 +464,7 @@
     <div class="tick-item"><div class="tick-dot" style="background:var(--r-color)"></div><span id="tk-r">Recovered: 0</span></div>
     <div class="tick-item"><div class="tick-dot" style="background:var(--d-color)"></div><span id="tk-d">Dead: 0</span></div>
     <div class="tick-item"><div class="tick-dot" style="background:var(--v-color)"></div><span id="tk-v">Vaccinated: 0</span></div>
+    <div class="tick-item"><div class="tick-dot" style="background:var(--l-color)"></div><span id="tk-l">Long-Term: 0</span></div>
     <div class="tick-item" id="run-status" style="margin-left:auto;display:none">
       <div class="tick-dot running-indicator" style="background:var(--i-color)"></div>
       <span class="running-indicator" style="color:var(--i-color);font-size:11px">SIMULATION RUNNING</span>
@@ -487,7 +497,7 @@
 const $ = id => document.getElementById(id);
 const COLORS = {
   S: '#56B4E9', E: '#E69F00', I: '#D55E00',
-  R: '#009E73', D: '#E03060', V: '#0072B2'
+  R: '#009E73', D: '#E03060', V: '#0072B2', L: '#CC79A7'
 };
 
 // ─────────────────────────────────────────────
@@ -507,13 +517,14 @@ wireSlider('s-mu',    'v-mu',    v => `${(v*100).toFixed(1)}%`);
 wireSlider('s-vax',   'v-vax',   v => `${Math.round(v*100)}%`);
 wireSlider('s-pop',   'v-pop',   v => `${Math.round(v)}`);
 wireSlider('s-speed', 'v-speed', v => `${Math.round(v)}`);
+wireSlider('s-long',  'v-long',  v => `${(v*100).toFixed(1)}%`);
 
 // ─────────────────────────────────────────────
 //  State
 // ─────────────────────────────────────────────
-const STATES = ['S','E','I','R','D','V'];
+const STATES = ['S','E','I','R','D','V','L'];
 
-let agents = [];       // {state, x, y, vx, vy}
+let agents = [];       // {state, longTerm, x, y, vx, vy}
 let history = [];      // [{S,E,I,R,D,V}] per day
 let day = 0;
 let running = false;
@@ -543,6 +554,7 @@ function init() {
 
     agents.push({
       state,
+      longTerm: false,
       x: 12 + Math.random() * (W - 24),
       y: 12 + Math.random() * (H - 24),
       vx: (Math.random() - 0.5) * 0.4,
@@ -558,15 +570,18 @@ function init() {
 }
 
 function snapshot() {
-  const cnt = {S:0,E:0,I:0,R:0,D:0,V:0};
-  agents.forEach(a => cnt[a.state]++);
+  const cnt = {S:0,E:0,I:0,R:0,D:0,V:0,L:0};
+  agents.forEach(a => {
+    cnt[a.state]++;
+    if (a.longTerm) cnt.L++;
+  });
   return {...cnt};
 }
 
 // ─────────────────────────────────────────────
 //  SEIRD step (discrete-time stochastic)
 // ─────────────────────────────────────────────
-function stepModel({ R0, sigma, gamma, mu }) {
+function stepModel({ R0, sigma, gamma, mu, longTermRate }) {
   const N    = agents.length;
   const beta = R0 * gamma;
 
@@ -600,7 +615,12 @@ function stepModel({ R0, sigma, gamma, mu }) {
       }
     } else if (a.state === 'I') {
       if (Math.random() < gamma) {
-        a.state = Math.random() < mu ? 'D' : 'R';
+        if (Math.random() < mu) {
+          a.state = 'D';
+        } else {
+          a.state = 'R';
+          a.longTerm = Math.random() < longTermRate;
+        }
       }
     }
   });
@@ -725,6 +745,7 @@ function drawLineChart() {
     {key: 'I', color: COLORS.I, dash: []},
     {key: 'R', color: COLORS.R, dash: [4, 4]},
     {key: 'D', color: COLORS.D, dash: [2, 3]},
+    {key: 'L', color: COLORS.L, dash: [10, 3]},
     ...(!hideVax ? [{key: 'V', color: COLORS.V, dash: [4, 3, 1, 3]}] : []),
   ];
 
@@ -759,6 +780,7 @@ function updateUI() {
   $('tk-r').textContent = 'Recovered: ' + snap.R;
   $('tk-d').textContent = 'Dead: ' + snap.D;
   $('tk-v').textContent = 'Vaccinated: ' + snap.V;
+  $('tk-l').textContent = 'Long-Term: ' + snap.L;
   $('day-counter').textContent = 'DAY ' + day;
 }
 
@@ -780,10 +802,11 @@ function loop(ts) {
   tickAccum = Math.min(tickAccum, msPerDay * 10);
 
   const params = {
-    R0:    parseFloat($('s-r0').value),
-    sigma: 1 / parseInt($('s-sigma').value),
-    gamma: 1 / parseInt($('s-gamma').value),
-    mu:    parseFloat($('s-mu').value),
+    R0:           parseFloat($('s-r0').value),
+    sigma:        1 / parseInt($('s-sigma').value),
+    gamma:        1 / parseInt($('s-gamma').value),
+    mu:           parseFloat($('s-mu').value),
+    longTermRate: parseFloat($('s-long').value),
   };
 
   while (tickAccum >= msPerDay) {
