@@ -2,6 +2,11 @@
 
 An interactive, browser-based epidemic simulation using a stochastic agent-based SEIRD + Vaccinated model.
 
+## Preview
+
+- [Stable (main)](https://htmlpreview.github.io/?https://raw.githubusercontent.com/walkerh/outbreak-sim/refs/heads/main/outbreak-sim.html)
+- [Experimental (dev)](https://htmlpreview.github.io/?https://raw.githubusercontent.com/walkerh/outbreak-sim/refs/heads/dev/outbreak-sim.html)
+
 ## Usage
 
 Open `outbreak-sim.html` in any modern browser. No server, build step, or dependencies required.
