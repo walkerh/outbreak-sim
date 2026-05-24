@@ -298,6 +298,58 @@
 
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
   .running-indicator { animation: pulse 1.2s infinite; color: var(--i-color); }
+
+  /* ── Mobile layout (≤ 640px) ── */
+  @media (max-width: 640px) {
+    header {
+      padding: 8px 14px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    header h1 { font-size: 20px; }
+    .subtitle  { font-size: 11px; }
+    .badge     { display: none; }
+
+    main {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* reorder: ticker → vis → controls */
+    .ticker   { order: 1; }
+    .vis-area { order: 2; }
+    aside     { order: 3; }
+
+    .ticker {
+      padding: 6px 12px;
+      gap: 6px 12px;
+      font-size: 11px;
+    }
+
+    aside {
+      border-right: none;
+      border-top: 1px solid var(--border);
+      padding: 16px 14px;
+    }
+
+    #pop-canvas {
+      height: 160px;
+    }
+
+    /* break out of unbounded flex-grow */
+    .chart-panel { flex: none; }
+    #line-canvas {
+      flex: none;
+      height: 260px;
+      min-height: unset;
+    }
+
+    /* 2-column legend saves vertical space */
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+  }
 </style>
 </head>
 <body>
