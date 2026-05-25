@@ -697,7 +697,7 @@ function drawLineChart() {
   ctx.fillStyle = '#7aa0be';
   ctx.font = '12px Share Tech Mono';
   ctx.textAlign = 'center';
-  const labelCount = Math.min(10, days - 1);
+  const labelCount = Math.min(Math.floor(cw / 50), days - 1);
   for (let i = 0; i <= labelCount; i++) {
     const d = Math.round(i / labelCount * (days - 1));
     const x = pad.left + (d / (days - 1)) * cw;
