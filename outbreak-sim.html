@@ -832,6 +832,8 @@ $('btn-reset').addEventListener('click', () => {
   init();
 });
 
+// During simulation, draw functions read this checkbox each frame — no explicit
+// redraw needed. This handler covers the static (paused) case only.
 $('chk-hide-vax').addEventListener('change', () => {
   if (!running) { drawPopCanvas(); drawLineChart(); }
 });
