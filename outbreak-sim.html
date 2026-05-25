@@ -802,7 +802,7 @@ function loop(ts) {
 function start() {
   if (running) return;
   running = true;
-  $('btn-run').disabled = true;
+  $('btn-run').textContent = '⏸ Pause';
   $('run-status').style.display = 'flex';
   lastTick = performance.now();
   tickAccum = 0;
@@ -811,7 +811,7 @@ function start() {
 
 function stop() {
   running = false;
-  $('btn-run').disabled = false;
+  $('btn-run').textContent = '▶ Run';
   $('run-status').style.display = 'none';
   if (animHandle) cancelAnimationFrame(animHandle);
 }
@@ -820,7 +820,9 @@ function stop() {
 //  Button handlers
 // ─────────────────────────────────────────────
 $('btn-run').addEventListener('click', () => {
-  if (isOver() && day > 0) {
+  if (running) {
+    stop();
+  } else if (isOver() && day > 0) {
     init();
     setTimeout(start, 50);
   } else {
