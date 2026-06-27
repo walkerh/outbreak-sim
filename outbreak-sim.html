@@ -144,6 +144,23 @@
     box-shadow: 0 0 6px var(--accent);
   }
 
+  select {
+    width: 100%;
+    background: #0a1828;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select:focus { border-color: var(--accent); }
+  select option { background: #0c1220; }
+
   /* ── Buttons ── */
   .btn-row { display: flex; gap: 8px; }
   button {
@@ -367,6 +384,17 @@
   <aside>
     <div>
       <div class="section-label">Transmission Parameters</div>
+      <div class="control" style="margin-bottom:14px">
+        <label for="s-preset" style="margin-bottom:6px;display:block">Pathogen Preset</label>
+        <select id="s-preset">
+          <option value="">— Custom —</option>
+          <option value="measles">Measles</option>
+          <option value="smallpox">Smallpox (Variola Major)</option>
+          <option value="flu_1918">1918 H1N1 — Spanish Flu</option>
+          <option value="flu_2009">2009 H1N1 — Swine Flu</option>
+        </select>
+        <div class="desc" id="preset-desc"></div>
+      </div>
       <div class="control-group">
 
         <div class="control">
@@ -491,6 +519,28 @@ const COLORS = {
 };
 
 // ─────────────────────────────────────────────
+//  Pathogen presets
+// ─────────────────────────────────────────────
+const PRESETS = {
+  measles: {
+    r0: 15.0, latent: 10, infectious: 8, mu: 0.005,
+    desc: 'R₀ ≈ 15 · Latent 10 days · Infectious 8 days · CFR shown as 0.5% (true rate ~0.1–0.3% in high-income settings).',
+  },
+  smallpox: {
+    r0: 6.0, latent: 12, infectious: 8, mu: 0.30,
+    desc: 'R₀ ≈ 6 · CFR ~30% (variola major) · Eradicated by global vaccination campaign, 1980.',
+  },
+  flu_1918: {
+    r0: 2.5, latent: 2, infectious: 4, mu: 0.025,
+    desc: 'R₀ ≈ 2.5 · CFR ~2.5% · Killed an estimated 50 million people worldwide.',
+  },
+  flu_2009: {
+    r0: 1.5, latent: 2, infectious: 5, mu: 0.000,
+    desc: 'R₀ ≈ 1.5 · CFR ~0.02% (shown as 0% — below slider resolution) · Declared pandemic June 2009.',
+  },
+};
+
+// ─────────────────────────────────────────────
 //  Slider wiring
 // ─────────────────────────────────────────────
 function wireSlider(sliderId, displayId, fmt) {
@@ -507,6 +557,20 @@ wireSlider('s-mu',    'v-mu',    v => `${(v*100).toFixed(1)}%`);
 wireSlider('s-vax',   'v-vax',   v => `${Math.round(v*100)}%`);
 wireSlider('s-pop',   'v-pop',   v => `${Math.round(v)}`);
 wireSlider('s-speed', 'v-speed', v => `${Math.round(v)}`);
+
+$('s-preset').addEventListener('change', () => {
+  const key = $('s-preset').value;
+  const p = PRESETS[key];
+  $('preset-desc').textContent = p ? p.desc : '';
+  if (!p) return;
+  $('s-r0').value    = p.r0;
+  $('s-sigma').value = p.latent;
+  $('s-gamma').value = p.infectious;
+  $('s-mu').value    = p.mu;
+  ['s-r0', 's-sigma', 's-gamma', 's-mu'].forEach(id =>
+    $(id).dispatchEvent(new Event('input'))
+  );
+});
 
 // ─────────────────────────────────────────────
 //  State
