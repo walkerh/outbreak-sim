@@ -36,10 +36,11 @@ The simulation ends when no Exposed or Infected individuals remain.
 
 | Parameter | Description |
 |---|---|
+| **Pathogen preset** | Loads empirically grounded parameters for a known pathogen (Measles, Smallpox, 1918 H1N1, 2009 H1N1); vaccinated fraction is left unchanged for the user to explore |
 | **R₀** (0.5–25) | Basic reproduction number — average secondary infections in a fully susceptible population |
 | **Latent period** | Days from exposure to becoming infectious |
 | **Infectious period** | Days an infected individual remains contagious |
-| **Mortality rate** | Fraction of infected individuals who die |
+| **Mortality rate μ** (log scale, 0–50%) | Fraction of infected individuals who die; slider is logarithmic so every decade of CFR gets equal resolution |
 | **Vaccinated fraction** | Population already immune at day 0 |
 | **Population size** | Number of simulated individuals |
 | **Days/second** | Simulation playback speed |
