@@ -37,7 +37,7 @@ Transitions are stochastic each day:
 | `wireSlider` | Binds a range input to its display label |
 | `muFromSlider(s)` | Maps raw slider integer 0–100 to μ on a log scale (s=0 → 0%; s=1 → 0.01%; s=100 → 50%) |
 | `sliderFromMu(mu)` | Inverse of `muFromSlider`; used by the preset loader to position the μ slider |
-| `muDisplay(mu)` | Formats μ with adaptive precision: 2 dp below 0.1%, 1 dp up to 10%, 0 dp above |
+| `muDisplay(mu)` | Formats μ with adaptive precision: 2 dp below 1%, 1 dp up to 10%, 0 dp above |
 | `init()` | Allocates agents, seeds V and I states, resets history |
 | `snapshot()` | Counts agents by state → one history entry |
 | `stepModel(params)` | Advances one day: applies drift, runs state transitions, pushes snapshot; receives `{R0, sigma, gamma, mu}` from `loop()` |
