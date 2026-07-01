@@ -593,6 +593,8 @@ $('s-preset').addEventListener('change', () => {
   ['s-r0', 's-sigma', 's-gamma', 's-mu'].forEach(id =>
     $(id).dispatchEvent(new Event('input'))
   );
+  stop();
+  init();
 });
 
 // ─────────────────────────────────────────────
