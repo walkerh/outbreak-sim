@@ -883,15 +883,14 @@ function loop(ts) {
   lastTick = ts;
   tickAccum = Math.min(tickAccum, msPerDay * 10);
 
-  const params = {
-    R0:    parseFloat($('s-r0').value),
-    sigma: 1 / parseInt($('s-sigma').value),
-    gamma: 1 / parseInt($('s-gamma').value),
-    mu:    muFromSlider(parseFloat($('s-mu').value)),
-  };
-
   while (tickAccum >= msPerDay) {
     tickAccum -= msPerDay;
+    const params = {
+      R0:    parseFloat($('s-r0').value),
+      sigma: 1 / parseInt($('s-sigma').value),
+      gamma: 1 / parseInt($('s-gamma').value),
+      mu:    muFromSlider(parseFloat($('s-mu').value)),
+    };
     stepModel(params);
     if (isOver()) { stop(); break; }
   }
