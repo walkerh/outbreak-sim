@@ -13,6 +13,7 @@
     --border:    #1a2a3a;
     --accent:    #00e5ff;
     --dim:       #1e3448;
+    --input:     #0a1828;
 
     --s-color:   #56B4E9;   /* Susceptible  — Okabe-Ito sky blue      */
     --e-color:   #E69F00;   /* Exposed      — Okabe-Ito orange        */
@@ -146,7 +147,7 @@
 
   select {
     width: 100%;
-    background: #0a1828;
+    background: var(--input);
     border: 1px solid var(--border);
     color: var(--accent);
     font-family: var(--font-mono);
@@ -159,7 +160,7 @@
     -webkit-appearance: none;
   }
   select:focus { border-color: var(--accent); }
-  select option { background: #0c1220; }
+  select option { background: var(--panel); }
 
   /* ── Buttons ── */
   .btn-row { display: flex; gap: 8px; }
@@ -167,7 +168,7 @@
     flex: 1;
     padding: 10px 6px;
     border: 1px solid var(--border);
-    background: #0a1828;
+    background: var(--input);
     color: #7aa0be;
     font-family: var(--font-head);
     font-weight: 700;
