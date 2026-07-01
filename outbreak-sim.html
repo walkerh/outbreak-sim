@@ -581,18 +581,32 @@ wireSlider('s-vax',   'v-vax',   v => `${Math.round(v*100)}%`);
 wireSlider('s-pop',   'v-pop',   v => `${Math.round(v)}`);
 wireSlider('s-speed', 'v-speed', v => `${Math.round(v)}`);
 
+// Manually adjusting a disease parameter invalidates the loaded preset,
+// except while the preset handler itself is programmatically setting them.
+let applyingPreset = false;
+const PRESET_PARAM_SLIDERS = ['s-r0', 's-sigma', 's-gamma', 's-mu'];
+PRESET_PARAM_SLIDERS.forEach(id => {
+  $(id).addEventListener('input', () => {
+    if (applyingPreset) return;
+    $('s-preset').value = '';
+    $('preset-desc').textContent = '';
+  });
+});
+
 $('s-preset').addEventListener('change', () => {
   const key = $('s-preset').value;
   const p = PRESETS[key];
   $('preset-desc').textContent = p ? p.desc : '';
   if (!p) return;
+  applyingPreset = true;
   $('s-r0').value    = p.r0;
   $('s-sigma').value = p.latent;
   $('s-gamma').value = p.infectious;
   $('s-mu').value    = sliderFromMu(p.mu);
-  ['s-r0', 's-sigma', 's-gamma', 's-mu'].forEach(id =>
+  PRESET_PARAM_SLIDERS.forEach(id =>
     $(id).dispatchEvent(new Event('input'))
   );
+  applyingPreset = false;
   stop();
   init();
 });
