@@ -13,6 +13,7 @@
     --border:    #1a2a3a;
     --accent:    #00e5ff;
     --dim:       #1e3448;
+    --input:     #0a1828;
 
     --s-color:   #56B4E9;   /* Susceptible  — Okabe-Ito sky blue      */
     --e-color:   #E69F00;   /* Exposed      — Okabe-Ito orange        */
@@ -144,13 +145,30 @@
     box-shadow: 0 0 6px var(--accent);
   }
 
+  select {
+    width: 100%;
+    background: var(--input);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select:focus { border-color: var(--accent); }
+  select option { background: var(--panel); }
+
   /* ── Buttons ── */
   .btn-row { display: flex; gap: 8px; }
   button {
     flex: 1;
     padding: 10px 6px;
     border: 1px solid var(--border);
-    background: #0a1828;
+    background: var(--input);
     color: #7aa0be;
     font-family: var(--font-head);
     font-weight: 700;
@@ -367,6 +385,17 @@
   <aside>
     <div>
       <div class="section-label">Transmission Parameters</div>
+      <div class="control" style="margin-bottom:14px">
+        <label for="s-preset" style="margin-bottom:6px;display:block">Pathogen Preset</label>
+        <select id="s-preset">
+          <option value="">— Custom —</option>
+          <option value="measles">Measles</option>
+          <option value="smallpox">Smallpox (Variola Major)</option>
+          <option value="flu_1918">1918 H1N1 — Spanish Flu</option>
+          <option value="flu_2009">2009 H1N1 — Swine Flu</option>
+        </select>
+        <div class="desc" id="preset-desc"></div>
+      </div>
       <div class="control-group">
 
         <div class="control">
@@ -389,7 +418,7 @@
 
         <div class="control">
           <label for="s-mu">Mortality Rate (μ) <span class="val" id="v-mu">2.0%</span></label>
-          <input type="range" id="s-mu" min="0" max="0.50" step="0.005" value="0.02">
+          <input type="range" id="s-mu" min="0" max="100" step="1" value="63">
           <div class="desc">Fraction of infected individuals who die.</div>
         </div>
 
@@ -491,6 +520,51 @@ const COLORS = {
 };
 
 // ─────────────────────────────────────────────
+//  Pathogen presets
+// ─────────────────────────────────────────────
+const PRESETS = {
+  measles: {
+    r0: 15.0, latent: 10, infectious: 8, mu: 0.00144,
+    desc: 'R₀ ≈ 15 · Latent 10 days · Infectious 8 days · CFR ~0.14% in high-income settings.',
+  },
+  smallpox: {
+    r0: 6.0, latent: 12, infectious: 8, mu: 0.30,
+    desc: 'R₀ ≈ 6 · CFR ~30% (variola major) · Eradicated by global vaccination campaign, 1980.',
+  },
+  flu_1918: {
+    r0: 2.5, latent: 2, infectious: 4, mu: 0.025,
+    desc: 'R₀ ≈ 2.5 · CFR ~2.5% · Killed an estimated 50 million people worldwide.',
+  },
+  flu_2009: {
+    r0: 1.5, latent: 2, infectious: 5, mu: 0.0002,
+    desc: 'R₀ ≈ 1.5 · CFR ~0.02% · Declared pandemic June 2009.',
+  },
+};
+
+// ─────────────────────────────────────────────
+//  Mortality-rate (μ) log scale helpers
+// ─────────────────────────────────────────────
+// Slider stores integers 0–100; model needs the actual rate.
+// s=0 → μ=0; s=1 → μ≈0.01%; s=100 → μ=50%.
+function muFromSlider(s) {
+  if (s <= 0) return 0;
+  return Math.pow(10, -4 + 3.699 * (s - 1) / 99);
+}
+function sliderFromMu(mu) {
+  if (mu <= 0) return 0;
+  return Math.max(1, Math.min(100,
+    Math.round(1 + 99 * (Math.log10(mu) + 4) / 3.699)
+  ));
+}
+function muDisplay(mu) {
+  if (mu === 0) return '0%';
+  const pct = mu * 100;
+  if (pct < 1)  return pct.toFixed(2) + '%';
+  if (pct < 10) return pct.toFixed(1) + '%';
+  return Math.round(pct) + '%';
+}
+
+// ─────────────────────────────────────────────
 //  Slider wiring
 // ─────────────────────────────────────────────
 function wireSlider(sliderId, displayId, fmt) {
@@ -503,10 +577,40 @@ function wireSlider(sliderId, displayId, fmt) {
 wireSlider('s-r0',    'v-r0',    v => v.toFixed(1));
 wireSlider('s-sigma', 'v-sigma', v => `${Math.round(v)} days`);
 wireSlider('s-gamma', 'v-gamma', v => `${Math.round(v)} days`);
-wireSlider('s-mu',    'v-mu',    v => `${(v*100).toFixed(1)}%`);
+wireSlider('s-mu',    'v-mu',    v => muDisplay(muFromSlider(v)));
 wireSlider('s-vax',   'v-vax',   v => `${Math.round(v*100)}%`);
 wireSlider('s-pop',   'v-pop',   v => `${Math.round(v)}`);
 wireSlider('s-speed', 'v-speed', v => `${Math.round(v)}`);
+
+// Manually adjusting a disease parameter invalidates the loaded preset,
+// except while the preset handler itself is programmatically setting them.
+let applyingPreset = false;
+const PRESET_PARAM_SLIDERS = ['s-r0', 's-sigma', 's-gamma', 's-mu'];
+PRESET_PARAM_SLIDERS.forEach(id => {
+  $(id).addEventListener('input', () => {
+    if (applyingPreset) return;
+    $('s-preset').value = '';
+    $('preset-desc').textContent = '';
+  });
+});
+
+$('s-preset').addEventListener('change', () => {
+  const key = $('s-preset').value;
+  const p = PRESETS[key];
+  $('preset-desc').textContent = p ? p.desc : '';
+  if (!p) return;
+  applyingPreset = true;
+  $('s-r0').value    = p.r0;
+  $('s-sigma').value = p.latent;
+  $('s-gamma').value = p.infectious;
+  $('s-mu').value    = sliderFromMu(p.mu);
+  PRESET_PARAM_SLIDERS.forEach(id =>
+    $(id).dispatchEvent(new Event('input'))
+  );
+  applyingPreset = false;
+  stop();
+  init();
+});
 
 // ─────────────────────────────────────────────
 //  State
@@ -697,7 +801,7 @@ function drawLineChart() {
   ctx.fillStyle = '#7aa0be';
   ctx.font = '12px Share Tech Mono';
   ctx.textAlign = 'center';
-  const labelCount = Math.min(Math.floor(cw / 50), days - 1);
+  const labelCount = Math.max(1, Math.min(Math.floor(cw / 50), days - 1));
   for (let i = 0; i <= labelCount; i++) {
     const d = Math.round(i / labelCount * (days - 1));
     const x = pad.left + (d / (days - 1)) * cw;
@@ -779,15 +883,14 @@ function loop(ts) {
   lastTick = ts;
   tickAccum = Math.min(tickAccum, msPerDay * 10);
 
-  const params = {
-    R0:    parseFloat($('s-r0').value),
-    sigma: 1 / parseInt($('s-sigma').value),
-    gamma: 1 / parseInt($('s-gamma').value),
-    mu:    parseFloat($('s-mu').value),
-  };
-
   while (tickAccum >= msPerDay) {
     tickAccum -= msPerDay;
+    const params = {
+      R0:    parseFloat($('s-r0').value),
+      sigma: 1 / parseInt($('s-sigma').value),
+      gamma: 1 / parseInt($('s-gamma').value),
+      mu:    muFromSlider(parseFloat($('s-mu').value)),
+    };
     stepModel(params);
     if (isOver()) { stop(); break; }
   }

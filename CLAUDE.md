@@ -35,6 +35,9 @@ Transitions are stochastic each day:
 | Function | Role |
 |---|---|
 | `wireSlider` | Binds a range input to its display label |
+| `muFromSlider(s)` | Maps raw slider integer 0–100 to μ on a log scale (s=0 → 0%; s=1 → 0.01%; s=100 → 50%) |
+| `sliderFromMu(mu)` | Inverse of `muFromSlider`; used by the preset loader to position the μ slider |
+| `muDisplay(mu)` | Formats μ with adaptive precision: 2 dp below 1%, 1 dp up to 10%, 0 dp above |
 | `init()` | Allocates agents, seeds V and I states, resets history |
 | `snapshot()` | Counts agents by state → one history entry |
 | `stepModel(params)` | Advances one day: applies drift, runs state transitions, pushes snapshot; receives `{R0, sigma, gamma, mu}` from `loop()` |
@@ -44,6 +47,8 @@ Transitions are stochastic each day:
 | `isOver()` | Returns true when E + I = 0 |
 | `loop(ts)` | `requestAnimationFrame` callback; accumulates elapsed time to fire `stepModel` at the configured days/second rate |
 | `start()` / `stop()` | Start and stop the animation loop |
+
+The `PRESETS` constant (placed after `COLORS`) maps preset keys to `{r0, latent, infectious, mu, desc}`. The μ slider for mortality rate uses a **logarithmic scale** — the slider stores an integer 0–100 and `muFromSlider`/`sliderFromMu` convert between slider position and actual rate.
 
 ### CSS variables (theming)
 

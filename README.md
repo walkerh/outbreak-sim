@@ -32,14 +32,28 @@ State transitions are stochastic each simulated day:
 
 The simulation ends when no Exposed or Infected individuals remain.
 
+## Pathogen Presets
+
+The **Pathogen Preset** dropdown loads empirically grounded parameters for four reference pathogens. The vaccinated fraction is intentionally left unchanged so users can explore herd immunity effects independently.
+
+| Preset | R₀ | Latent period | Infectious period | CFR |
+|---|---|---|---|---|
+| Measles | 15 | 10 days | 8 days | ~0.15% |
+| Smallpox (Variola Major) | 6 | 12 days | 8 days | ~30% |
+| 1918 H1N1 (Spanish Flu) | 2.5 | 2 days | 4 days | ~2.5% |
+| 2009 H1N1 (Swine Flu) | 1.5 | 2 days | 5 days | ~0.02% |
+
+These four span a wide range of R₀ and CFR combinations, illustrating that transmissibility and lethality are independent dimensions of epidemic risk.
+
 ## Controls
 
 | Parameter | Description |
 |---|---|
+| **Pathogen preset** | Loads empirically grounded parameters for a known pathogen (Measles, Smallpox, 1918 H1N1, 2009 H1N1); vaccinated fraction is left unchanged for the user to explore |
 | **R₀** (0.5–25) | Basic reproduction number — average secondary infections in a fully susceptible population |
 | **Latent period** | Days from exposure to becoming infectious |
 | **Infectious period** | Days an infected individual remains contagious |
-| **Mortality rate** | Fraction of infected individuals who die |
+| **Mortality rate μ** (log scale, 0–50%) | Fraction of infected individuals who die; slider is logarithmic so every decade of CFR gets equal resolution |
 | **Vaccinated fraction** | Population already immune at day 0 |
 | **Population size** | Number of simulated individuals |
 | **Days/second** | Simulation playback speed |
